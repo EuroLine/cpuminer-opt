@@ -73,13 +73,18 @@ int64_t argon2_get_max64 ()
 	return 0x1ffLL;
 }
 
+void argon2d_set_target( struct work* work, double job_diff )
+{
+ work_set_target( work, (job_diff * 65536.0) / (opt_diff_factor) );
+}
+
 bool register_argon2_algo( algo_gate_t* gate )
 {
   gate->optimizations = AVX2_OPT;
   gate->scanhash        = (void*)&scanhash_argon2;
   gate->hash            = (void*)&argon2hash;
   gate->gen_merkle_root = (void*)&SHA256_gen_merkle_root;
-  //gate->set_target      = (void*)&scrypt_set_target; 
+  gate->set_target    	= (void*)&argon2d_set_target; 
   gate->get_max64       = (void*)&argon2_get_max64;
   return true;
 };
