@@ -58,12 +58,14 @@ cpuminer_SOURCES = \
   algo/argon2/argon2a.c \
   algo/argon2/ar2/argon2.c \
   algo/argon2/ar2/opt.c \
-  algo/argon2/ar2/cores.c \
+  algo/argon2/ar2/thread.c \
+  algo/argon2/ar2/encoding.c \
+  algo/argon2/ar2/core.c \
   algo/argon2/ar2/ar2-scrypt-jane.c \
   algo/argon2/ar2/blake2b.c \
   algo/axiom.c \
   algo/blake/blake.c \
-  algo/blake/blake2b.c \
+  algo/blake/blake2b.c \ 
   algo/blake/blake2s.c \
   algo/blake/blakecoin.c \
   algo/blake/decred.c \

@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <openssl/sha.h>
 #include "ar2/argon2.h"
-#include "ar2/cores.h"
-#include "ar2/ar2-scrypt-jane.h"
+#include "ar2/core.h"
+//#include "ar2/ar2-scrypt-jane.h"
 #include "algo-gate-api.h"
 
 #define T_COSTS 2
@@ -29,19 +29,10 @@ inline void argon_call(void *out, void *in, void *salt, int type)
 	argon2_core(&context, type);
 }
 
-void argon2hash(void *output, const void *input)
+void argon2hash(void *output, const void *input, void *Ctx)
 {
-	uint32_t _ALIGN(64) hashA[8], hashB[8];
+	WolfArgon2dPoWHash(output, Ctx, input);
 
-	my_scrypt((const unsigned char *)input, 80,
-		(const unsigned char *)input, 80,
-		(unsigned char *)hashA);
-
-	argon_call(hashB, hashA, hashA, (hashA[0] & MASK) == ZERO);
-
-	my_scrypt((const unsigned char *)hashB, 32,
-		(const unsigned char *)hashB, 32,
-		(unsigned char *)output);
 }
 
 int scanhash_argon2(int thr_id, struct work* work, uint32_t max_nonce, uint64_t *hashes_done)
@@ -57,9 +48,12 @@ int scanhash_argon2(int thr_id, struct work* work, uint32_t max_nonce, uint64_t 
 
         swab32_array( endiandata, pdata, 20 );
 
+	void *Ctx;
+	WolfArgon2dAllocateCtx(&Ctx);
+
 	do {
 		be32enc(&endiandata[19], nonce);
-		argon2hash(hash, endiandata);
+		argon2hash(hash, endiandata, Ctx); 
 		if (hash[7] <= Htarg && fulltest(hash, ptarget)) {
 			pdata[19] = nonce;
 			*hashes_done = pdata[19] - first_nonce;
@@ -76,16 +70,16 @@ int scanhash_argon2(int thr_id, struct work* work, uint32_t max_nonce, uint64_t 
 
 int64_t argon2_get_max64 ()
 {
-  return 0x1ffLL;
+	return 0x1ffLL;
 }
 
 bool register_argon2_algo( algo_gate_t* gate )
 {
-  gate->optimizations = SSE2_OPT | AES_OPT | AVX_OPT | AVX2_OPT;
+  gate->optimizations = AVX2_OPT;
   gate->scanhash        = (void*)&scanhash_argon2;
   gate->hash            = (void*)&argon2hash;
   gate->gen_merkle_root = (void*)&SHA256_gen_merkle_root;
-  gate->set_target      = (void*)&scrypt_set_target;
+  //gate->set_target      = (void*)&scrypt_set_target; 
   gate->get_max64       = (void*)&argon2_get_max64;
   return true;
 };
